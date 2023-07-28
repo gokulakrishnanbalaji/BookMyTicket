@@ -9,7 +9,9 @@ Admins should be able to add, update and delete movies and events.
 
 ## Technologies Used
 Flask
+
 VueJS => 2
+
 Sqlite
 
 ## Installation
