@@ -14,6 +14,7 @@ const shows = Vue.component('shows', {
                 <p class="card-text">Duration : [[show.duration]]</p>
                 <p class="card-text">Seats Remaining : [[show.remaining_capacity]]</p>
                 <p class="card-text">Starting at [[show.timing]]</p>
+                <p class="card-text">Tags : [[show.tags]]</p>
                 <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="book_show(show.id)">Book Show</a>
             </div>
     </div>

@@ -13,6 +13,7 @@ import adminShows from "./components/admin_shows.js";
 import editShow from "./components/edit_show.js";
 import userProfile from "./components/user_profile.js";
 import summary_page from "./components/summary.js";
+import search_component from "./components/search.js";
 
 const routes = [
     { path: '/login', component: login_component },
@@ -29,7 +30,8 @@ const routes = [
     { path: '/admin_shows', component: adminShows},
     { path: '/edit_show', component: editShow},
     { path:'/user_profile', component: userProfile},
-    { path:'/summary', component: summary_page}
+    { path:'/summary', component: summary_page},
+    { path: '/search', component: search_component}
 ];
 
 const router = new VueRouter({

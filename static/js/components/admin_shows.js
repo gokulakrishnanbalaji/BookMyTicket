@@ -15,9 +15,21 @@ const adminShows = Vue.component('admin_shows', {
                 <p class="card-text">Duration : [[show.duration]]</p>
                 <p class="card-text">Seats Remaining : [[show.remaining_capacity]]</p>
                 <p class="card-text">Starting at [[show.timing]]</p>
+                <p class="card-text">Tags : [[show.tags]]</p>
                 <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="edit_show(show.id)">Edit Show</a>
-                <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_show(show.id)">Delete Show</a>
+                <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="confirm_delete(show.id)">Delete Show</a>
+
+                <div class="p-4 m-2 border border-danger rounded" style="background-color: white;" v-if="delete_confirmation && show.id == delete_show_id">
+                    <p>Are you sure you want to delete this show ?</p>
+                    <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_show(show.id)">Delete Show</a>
+                    <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_confirmation = false">Cancel</a>
+                </div>
             </div>
+
+            
+            
+            
+
     </div>
 
     <div class="col-3 d-flex align-items-center justify-content-center">
@@ -35,7 +47,9 @@ const adminShows = Vue.component('admin_shows', {
         return {
             shows: [],
             status:0,
-            theatre_id: localStorage.getItem('theatre_id')
+            theatre_id: localStorage.getItem('theatre_id'),
+            delete_confirmation:false,
+            delete_show_id:-1
         }
         }
     ,
@@ -76,6 +90,7 @@ const adminShows = Vue.component('admin_shows', {
 
     methods: {
         delete_show: function (show_id) {
+          
             fetch("/api/show/"+show_id, {
                 method: 'DELETE',
                 headers: {
@@ -107,6 +122,11 @@ const adminShows = Vue.component('admin_shows', {
         edit_show: function(show_id){
             localStorage.setItem('show_id', show_id);
             this.$router.push('/edit_show');
+        },
+
+        confirm_delete: function(show_id){
+            this.delete_confirmation = true;
+            this.delete_show_id = show_id;
         }
 
 

@@ -48,6 +48,16 @@ const addShow = Vue.component('add_show', {
                 <input class="form-control" type="text" v-model="timing" id="timing">
             </div>
         </div>
+
+        <div class="row my-2">
+            <div class="col-4">
+                <label class="col-form-label" for="tags">Tags</label>  
+                </div>
+            <div class="col-8">
+                <input class="form-control" type="text" v-model="tags" id="tags">
+            </div>
+        </div>
+
         <div class="row my-2">
             <div class="col-4">
                 <label class="col-form-label" for="price">Price</label>  
@@ -80,7 +90,8 @@ const addShow = Vue.component('add_show', {
             timing:'',
             genre:'',
             duration:0,
-            theatre_id: localStorage.getItem('theatre_id')
+            theatre_id: localStorage.getItem('theatre_id'),
+            tags:''
         }
     }
     ,
@@ -133,7 +144,8 @@ const addShow = Vue.component('add_show', {
                     duration: this.duration,
                     timing: this.timing,
                     price: this.price,
-                    theatre_id: this.theatre_id
+                    theatre_id: this.theatre_id,
+                    tags: this.tags
                 })
             })
                 .then(response => {

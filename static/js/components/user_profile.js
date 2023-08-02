@@ -60,9 +60,20 @@ const userProfile = Vue.component('user_profile', {
   
     </div>
     <div class="row d-flex">
-    <button style="background-color: #867070; border:none;"  class="btn btn-primary col-2 mx-auto m-5" v-on:click="delete_user" type="submit">Delete My Account</button>
+    <button style="background-color: #867070; border:none;"  class="btn btn-primary col-2 mx-auto m-5" v-on:click="confirm_delete" type="submit">Delete My Account</button>
     </div>
+    <div class="row d-flex">
+    <div v-if="delete_confirmation" class="mx-auto text-center col-4 p-4 m-2 border border-danger rounded" style="background-color: white;">
+        <p>Are you sure you want to delete your account ?</p>
+        <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_user">Delete Account</a>
+        <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_confirmation = false">Cancel</a>
+        </div>
     </div>
+    
+    
+    </div>
+
+    
 
     </div>
     </div>
@@ -76,7 +87,8 @@ const userProfile = Vue.component('user_profile', {
             old_password: "",
             new_password:"",
             error_message: "",
-            status: 0
+            status: 0,
+            delete_confirmation: false,
         }
     },
     mounted: function () {
@@ -186,6 +198,9 @@ const userProfile = Vue.component('user_profile', {
             }
             );
 
+        },
+        confirm_delete: function () {
+            this.delete_confirmation = true;
         }
     },
 

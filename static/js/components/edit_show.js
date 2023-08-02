@@ -57,6 +57,15 @@ const editShow = Vue.component('edit_show', {
                 <input class="form-control" type="text" v-model="price" id="price">
             </div>
         </div>
+
+        <div class="row my-2">
+            <div class="col-4">
+                <label class="col-form-label" for="tags">Tags</label>  
+                </div>
+            <div class="col-8">
+                <textarea ref="textarea" rows="1" @input="resizeTextarea" class="form-control" type="text" v-model="tags" id="tags"></textarea>
+            </div>
+        </div>
             </div>
 
                 
@@ -81,7 +90,8 @@ const editShow = Vue.component('edit_show', {
             price: '',
             status:0,
             theatre_id: localStorage.getItem('theatre_id'),
-            error_message: ''
+            error_message: '',
+            tags:''
         }
         },
     mounted() {
@@ -94,6 +104,7 @@ const editShow = Vue.component('edit_show', {
             return;
         }
         else{
+            
             localStorage.setItem('current_page', 'edit_show');
             fetch('/api/show/' + localStorage.getItem('show_id'), {
                 method: 'GET',
@@ -116,13 +127,18 @@ const editShow = Vue.component('edit_show', {
                     this.duration = data.show.duration;
                     this.timing = data.show.timing;
                     this.price = data.show.price;
+                    this.tags = data.show.tags;
+                    
                 }
                 )
                 .catch((error) => {
                     console.error('Error:', error);
                 }
                 );
+
+                
         }
+        this.resizeTextarea();
     },
 
     methods: {
@@ -143,7 +159,8 @@ const editShow = Vue.component('edit_show', {
                     genre: this.genre,
                     duration: this.duration,
                     timing: this.timing,
-                    price: this.price
+                    price: this.price,
+                    tags: this.tags
                 })
             })
                 .then(response => {
@@ -165,6 +182,10 @@ const editShow = Vue.component('edit_show', {
                     console.error('Error:', error);
                 }
                 );
+        },
+        resizeTextarea() {
+            this.$refs.textarea.style.height = "auto";
+            this.$refs.textarea.style.height = `${this.$refs.textarea.scrollHeight}px`;
         }
     },
 });

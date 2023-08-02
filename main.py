@@ -54,6 +54,8 @@ class Show(db.Model):
     timing = db.Column(db.String, nullable=False)
     remaining_capacity=db.Column(db.Integer, nullable=False)
     price = db.Column(db.Integer, nullable=False)
+    tags=db.Column(db.String)
+
 
 class Booking(db.Model):
     __tablename__ = 'booking'
@@ -384,6 +386,7 @@ def get_shows():
         show_data['timing'] = show.timing
         show_data['remaining_capacity'] = show.remaining_capacity
         show_data['price'] = show.price
+        show_data['tags']=show.tags
 
         output.append(show_data)
     return jsonify({'shows': output}),200
@@ -403,6 +406,7 @@ def get_show(id):
     show_data['timing'] = show.timing
     show_data['remaining_capacity'] = show.remaining_capacity
     show_data['price'] = show.price
+    show_data['tags']=show.tags
 
     return jsonify({'show': show_data}),200
 
@@ -428,6 +432,7 @@ def get_shows_by_theatre(theatre_id):
         show_data['timing'] = show.timing
         show_data['remaining_capacity'] = show.remaining_capacity
         show_data['price'] = show.price
+        show_data['tags']=show.tags
 
         output.append(show_data)
     return jsonify({'shows': output}),200
@@ -470,11 +475,13 @@ def create_show():
         if (start_time >= show_start_time and start_time <= show_end_time) or (end_time >= show_start_time and end_time <= show_end_time):
             return jsonify({'message': 'Show timing clashes with another show!'}),409
 
-    new_show = Show(name=data['name'], duration=data['duration'], genre=data['genre'], theatre_id=data['theatre_id'], timing=data['timing'], remaining_capacity=theatre.capacity, price=data['price'])
+
+    new_show = Show(name=data['name'], duration=data['duration'], genre=data['genre'], theatre_id=data['theatre_id'], timing=data['timing'], remaining_capacity=theatre.capacity, price=data['price'], tags=data['tags'])
 
     db.session.add(new_show)
     db.session.commit()
     return jsonify({'message': 'New show created!'}),200
+
 
 @app.route('/api/book_show', methods=['POST'])
 @jwt_required()
@@ -536,6 +543,7 @@ def update_show(id):
     show.genre = data['genre']
     show.timing = data['timing']
     show.price = data['price']
+    show.tags=data['tags']
 
     db.session.commit()
     return jsonify({'message': 'Show updated!'}),200
@@ -667,9 +675,7 @@ def get_image(filename):
     
     # Return the image for the corresponding index
     return send_file(generated_images[index], mimetype='image/png')
-
-
-    
+  
 
 if __name__ == '__main__':
     app.run(debug=True)
