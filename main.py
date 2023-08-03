@@ -47,7 +47,7 @@ class Theatre(db.Model):
 class Show(db.Model):
     __tablename__ = 'show'
     id = db.Column(db.Integer, primary_key=True,auto_increment=True)
-    name = db.Column(db.String(20), nullable=False, unique=True)
+    name = db.Column(db.String(20), nullable=False)
     duration = db.Column(db.Integer, nullable=False)
     genre = db.Column(db.String(100), nullable=False)
     theatre_id = db.Column(db.Integer, db.ForeignKey('theatre.id'), nullable=False)
@@ -455,11 +455,6 @@ def create_show():
     if theatre.user_id != current_user_id:
         return jsonify({'message': 'Only admin of theatre can create shows!'}),401
 
-    old_show = Show.query.filter_by(name=data['name']).first()
-
-    if old_show:
-        return jsonify({'message': 'Show already exists!'}),409
-
     start_time = datetime.strptime(data['timing'], '%H:%M')
     end_time = start_time + timedelta(minutes=int(data['duration']))
     end_time = end_time.strftime('%H:%M')
@@ -705,11 +700,13 @@ def search():
         return jsonify({'theatres': output}),200
     
     if data['show_name']:
+        output = []
         for theatre in theatres:
             shows = Show.query.filter(Show.name.like(f'%{data["show"]}%'),Show.theatre_id==theatre.id).all()
+            print(shows)
             if not shows:
                 return jsonify({'message': 'No shows found!'}),404
-            output = []
+            
             for show in shows:
                 show_data = {}
                 show_data['id'] = show.id
@@ -725,14 +722,16 @@ def search():
                 show_data['city']=theatre.city
 
                 output.append(show_data)
-            return jsonify({'shows': output}),200
+        return jsonify({'shows': output}),200
         
     elif data['show_tags']:
+        output = []
         for theatre in theatres:
+            
             shows = Show.query.filter(Show.tags.like(f'%{data["show"]}%'),Show.theatre_id==theatre.id).all()
             if not shows:
                 return jsonify({'message': 'No shows found!'}),404
-            output = []
+            
             for show in shows:
                 show_data = {}
                 show_data['id'] = show.id
@@ -748,16 +747,16 @@ def search():
                 show_data['city']=theatre.city
 
                 output.append(show_data)
-            return jsonify({'shows': output}),200
+        return jsonify({'shows': output}),200
         
     else:
         rating = int(data['show'])
+        output = []
         for theatre in theatres:
-            # get shows that have average rating greater than or equal to the rating, use booking table to get rating
             shows = Show.query.filter(Show.theatre_id==theatre.id).all()
             if not shows:
                 return jsonify({'message': 'No shows found!'}),404
-            output = []
+            
             for show in shows:
                 bookings = Booking.query.filter_by(show_id=show.id).all()
                 total_rating = 0
@@ -783,7 +782,7 @@ def search():
                     show_data['city']=theatre.city
 
                     output.append(show_data)
-            return jsonify({'shows': output}),200
+        return jsonify({'shows': output}),200
         
         
     return jsonify({'message': 'No shows found!'}),404

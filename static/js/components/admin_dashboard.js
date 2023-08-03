@@ -20,7 +20,7 @@ const admin_theatres = Vue.component('admin-theatres', {
 
                     <div class="p-4 m-2 border border-danger rounded" style="background-color: white;" v-if="delete_confirmation && theatre.id == delete_theatre_id">
                     <p>Are you sure you want to delete this Theatre ?</p>
-                    <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_theatre(theatre.id)">Delete Theatre</a>
+                    <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_theatre(theatre.id)">Delete</a>
                     <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_confirmation = false">Cancel</a>
                 </div>
                 </div>
