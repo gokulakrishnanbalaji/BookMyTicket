@@ -45,7 +45,7 @@ const register_component = Vue.component('register-component', {
             <div class="col-6">
                 <label class="col-form-label" for="is_admin">Register as admin</label>  
                 </div>
-            <div class="col-6">
+            <div class="col-6 form-check">
                 <input class="form-control form-check-input" type="checkbox" v-model="is_admin_check" id="is_admin">
             </div>
         </div>
@@ -84,6 +84,7 @@ const register_component = Vue.component('register-component', {
             is_admin_check:false,
             admin_key:'',
             is_admin:false,
+           
         }
     }
     ,

@@ -676,6 +676,117 @@ def get_image(filename):
     # Return the image for the corresponding index
     return send_file(generated_images[index], mimetype='image/png')
   
+@app.route('/api/search', methods=['POST'])
+@jwt_required()
+def search():
+    data = request.get_json()
+    
+    if data['theatre_name']:
+        theatres = Theatre.query.filter(Theatre.name.like(f'%{data["theatre"]}%')).all()
+        print(theatres,data['theatre_name'])
+    else:
+        theatres = Theatre.query.filter(Theatre.city.like(f'%{data["theatre"]}%')).all()
+
+    if not theatres:
+        return jsonify({'message': 'No theatres found!'}),404
+
+    if not data['show']:
+        output = []
+        for theatre in theatres:
+            theatre_data = {}
+            theatre_data['id'] = theatre.id
+            theatre_data['name'] = theatre.name
+            theatre_data['address'] = theatre.address
+            theatre_data['city'] = theatre.city
+            theatre_data['user_id'] = theatre.user_id
+            theatre_data['capacity'] = theatre.capacity
+
+            output.append(theatre_data)
+        return jsonify({'theatres': output}),200
+    
+    if data['show_name']:
+        for theatre in theatres:
+            shows = Show.query.filter(Show.name.like(f'%{data["show"]}%'),Show.theatre_id==theatre.id).all()
+            if not shows:
+                return jsonify({'message': 'No shows found!'}),404
+            output = []
+            for show in shows:
+                show_data = {}
+                show_data['id'] = show.id
+                show_data['name'] = show.name
+                show_data['duration'] = show.duration
+                show_data['genre'] = show.genre
+                show_data['theatre_id'] = show.theatre_id
+                show_data['timing'] = show.timing
+                show_data['remaining_capacity'] = show.remaining_capacity
+                show_data['price'] = show.price
+                show_data['tags']=show.tags
+                show_data['theatre_name']=theatre.name
+                show_data['city']=theatre.city
+
+                output.append(show_data)
+            return jsonify({'shows': output}),200
+        
+    elif data['show_tags']:
+        for theatre in theatres:
+            shows = Show.query.filter(Show.tags.like(f'%{data["show"]}%'),Show.theatre_id==theatre.id).all()
+            if not shows:
+                return jsonify({'message': 'No shows found!'}),404
+            output = []
+            for show in shows:
+                show_data = {}
+                show_data['id'] = show.id
+                show_data['name'] = show.name
+                show_data['duration'] = show.duration
+                show_data['genre'] = show.genre
+                show_data['theatre_id'] = show.theatre_id
+                show_data['timing'] = show.timing
+                show_data['remaining_capacity'] = show.remaining_capacity
+                show_data['price'] = show.price
+                show_data['tags']=show.tags
+                show_data['theatre_name']=theatre.name
+                show_data['city']=theatre.city
+
+                output.append(show_data)
+            return jsonify({'shows': output}),200
+        
+    else:
+        rating = int(data['show'])
+        for theatre in theatres:
+            # get shows that have average rating greater than or equal to the rating, use booking table to get rating
+            shows = Show.query.filter(Show.theatre_id==theatre.id).all()
+            if not shows:
+                return jsonify({'message': 'No shows found!'}),404
+            output = []
+            for show in shows:
+                bookings = Booking.query.filter_by(show_id=show.id).all()
+                total_rating = 0
+                for booking in bookings:
+                    if booking.rating:
+                        total_rating += booking.rating
+                if len(bookings) != 0:
+                    avg_rating = total_rating/len(bookings)
+                else:
+                    avg_rating = 0
+                if avg_rating >= rating:
+                    show_data = {}
+                    show_data['id'] = show.id
+                    show_data['name'] = show.name
+                    show_data['duration'] = show.duration
+                    show_data['genre'] = show.genre
+                    show_data['theatre_id'] = show.theatre_id
+                    show_data['timing'] = show.timing
+                    show_data['remaining_capacity'] = show.remaining_capacity
+                    show_data['price'] = show.price
+                    show_data['tags']=show.tags
+                    show_data['theatre_name']=theatre.name
+                    show_data['city']=theatre.city
+
+                    output.append(show_data)
+            return jsonify({'shows': output}),200
+        
+        
+    return jsonify({'message': 'No shows found!'}),404
 
 if __name__ == '__main__':
     app.run(debug=True)

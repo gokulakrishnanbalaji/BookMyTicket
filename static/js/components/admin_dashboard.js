@@ -8,15 +8,21 @@ const admin_theatres = Vue.component('admin-theatres', {
         <div class='h1 text-center'>My Theatres</div>
 
         
-        <div v-on:click="shows(theatre.id)" style="background-color: #E4D0D0; cursor: pointer;" v-for="theatre in theatres" class="card col-3 m-4 " >
-                <img src="static/img/theatre.png" class="card-img-top" alt="Theatre pic">
+        <div  style="background-color: #E4D0D0; cursor: pointer;" v-for="theatre in theatres" class="card col-3 m-4 " >
+                <img v-on:click="shows(theatre.id)" src="static/img/theatre.png" class="card-img-top" alt="Theatre pic">
                 <div class="card-body">
                     <h5 class="card-title">[[theatre.name]]</h5>
                     <p class="card-text">Address : [[theatre.address]]</p>
                     <p class="card-text">City : [[theatre.city]]</p>
                     <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="edit_theatre(theatre.id)">Edit</a>
-                    <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_theatre(theatre.id)">Delete</a>
+                    <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="confirm_delete(theatre.id)">Delete</a>
                     <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="add_shows(theatre.id)">Add shows</a>
+
+                    <div class="p-4 m-2 border border-danger rounded" style="background-color: white;" v-if="delete_confirmation && theatre.id == delete_theatre_id">
+                    <p>Are you sure you want to delete this Theatre ?</p>
+                    <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_theatre(theatre.id)">Delete Theatre</a>
+                    <a style="background-color: #867070; border:none;"  class="btn btn-primary" v-on:click="delete_confirmation = false">Cancel</a>
+                </div>
                 </div>
         </div>
 
@@ -35,6 +41,8 @@ const admin_theatres = Vue.component('admin-theatres', {
         return {
             theatres: [],
             status:0,
+            delete_confirmation: false,
+            delete_theatre_id: -1
         }
     },
     mounted() {
@@ -110,6 +118,12 @@ const admin_theatres = Vue.component('admin-theatres', {
         add_shows: function(id){
             localStorage.setItem('theatre_id', id);
             this.$router.push('/add_show');
+        },
+        
+        confirm_delete: function(id){
+            console.log("confirm delete");
+            this.delete_confirmation = true;
+            this.delete_theatre_id = id;
         },
 
         shows: function(id){
