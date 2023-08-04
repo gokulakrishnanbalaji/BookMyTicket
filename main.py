@@ -9,6 +9,10 @@ import redis
 from datetime import timedelta
 import matplotlib.pyplot as plt
 from io import BytesIO
+from celery_worker import make_celery
+from celery.result import AsyncResult
+import csv
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
@@ -17,6 +21,13 @@ app.config["JWT_SECRET_KEY"] = "super-secret"
 
 ACCESS_EXPIRES = timedelta(hours=6)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = ACCESS_EXPIRES
+
+app.config.update(
+    CELERY_BROKER_URL='redis://localhost:6379',
+    CELERY_RESULT_BACKEND='redis://localhost:6379'
+)
+celery = make_celery(app)
+
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -786,6 +797,44 @@ def search():
         
         
     return jsonify({'message': 'No shows found!'}),404
+
+@celery.task(name="generate_csv")
+def generate_csv(current_user_id):
+    theatres = Theatre.query.filter_by(user_id=current_user_id).all()
+    with open('static/theatres.csv', 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["Theatre Name", "Theatre City", "Show Name", "Show Timing", "Show Price"])
+        for theatre in theatres:
+            shows = Show.query.filter_by(theatre_id=theatre.id).all()
+            if shows != []:
+                for show in shows:
+                    writer.writerow([theatre.name, theatre.city, show.name, show.timing, show.price])
+            else:
+                writer.writerow([theatre.name, theatre.city, "No shows", "No shows", "No shows"])
+    return 'done'
+
+@app.route('/api/generate_csv', methods=['GET'])
+@jwt_required()
+def download_csv():
+    current_user_id = get_jwt_identity()
+    current_user = User.query.get_or_404(current_user_id)
+
+    if not current_user.is_admin:
+        return jsonify({'message': 'Only admin can download csv!'}),401
+    
+    task = generate_csv.delay(current_user_id)
+    return jsonify({'task_id': task.id , 'state': task.state}),200
+
+@app.route('/status/<id>')
+def taskstatus(id):
+    task = generate_csv.AsyncResult(id)
+    return jsonify({
+        "Task_ID": task.id,
+        "Task_State": task.state,
+        "Task_Result": task.result
+    })
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -34,6 +34,9 @@ const admin_theatres = Vue.component('admin-theatres', {
     
       </div>
     </div>
+    <button class="btn btn-primary" @click="generate">
+        Generate CSV
+    </button>
     </div>
     `,
     delimiters: ['[[', ']]'],
@@ -106,7 +109,7 @@ const admin_theatres = Vue.component('admin-theatres', {
                     .then(data => {
                         console.log('Success:', data);
                         this.theatres = data.theatres;  
-                        this.$router.push('/admin_dashboard');
+                        this.$router.go();
                     }
                     )
                     .catch((error) => {
@@ -129,6 +132,48 @@ const admin_theatres = Vue.component('admin-theatres', {
         shows: function(id){
             localStorage.setItem('theatre_id', id);
             this.$router.push('/admin_shows');
+        },
+
+        generate: function(){
+            fetch('/api/generate_csv',{
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+                })
+                .then(response => {
+                    this.status = response.status;
+                    return response
+                }
+                )
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                    
+                    let interval = setInterval(() => {
+                        fetch('/status/'+data.task_id)
+                        .then(response =>response.json())
+                        .then(data => {
+                            console.log(data);
+                            if(data.Task_State == 'SUCCESS'){
+                                window.location.href='/static/theatres.csv'
+                                console.log("Task finished")
+                                clearInterval(interval);
+                            }
+                            else{
+                                console.log("Task not finished");
+                            }
+                        })
+                    }, 4000);
+                }
+                )
+                .catch((error) => {
+                    console.error('Error:', error);
+                }
+                );
+                
         }
     },
 
