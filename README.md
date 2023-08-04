@@ -14,11 +14,18 @@ VueJS => 2
 
 Sqlite
 
+Celery
+
+Redis
+
 ## Installation
 Make sure you have python3 and pip3 installed on your system.
 
 1. Create a virtual environment using `python3 -m venv venv`
 2. Activate the virtual environment using `source venv/bin/activate`
 3. Install the dependencies using `pip3 install -r requirements.txt`
+4. Run celery by `celery -A main.celery worker -l info`
+5. Run redis by `redis-server`
+6. Run Flask application by `python3 main.py`
 
 Go to localhost:5000 to view the application.
