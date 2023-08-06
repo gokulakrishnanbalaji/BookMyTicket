@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from io import BytesIO
 from celery_worker import make_celery
 from celery.result import AsyncResult
+from celery.schedules import crontab
 import csv
 import smtplib
 from datetime import datetime
@@ -18,6 +19,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
+from fpdf import FPDF
 
 SMPTP_SERVER_HOST = "localhost"
 SMPTP_SERVER_PORT = 1025
@@ -909,6 +911,42 @@ def send_email_for_booking(email, username, theatre_name, show_name, show_timing
             message=f"Hi {username}, You have booked {tickets} tickets for {show_name} at {theatre_name} on {show_timing}. Thank you for using our service."
         )
         return "Booking email sholud be sent"
+
+@celery.task(name="send_hi")
+def send_report():
+    # generate a reporrt in pdf for all users not admin and send to their email
+    users = User.query.filter_by(is_admin=False).all()
+    for user in users:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        bookings = Booking.query.filter_by(user_id=user.id).all()
+        pdf.cell(200, 10, txt=f"Hi {user.username}, here is your report", ln=1, align="C")
+        pdf.cell(200, 10, txt=f"Your bookings are:", ln=1, align="C")
+        for booking in bookings:
+            show = Show.query.get(booking.show_id)
+            theatre = Theatre.query.get(show.theatre_id)
+            pdf.cell(200, 10, txt=f"{show.name} at {theatre.name} on {show.timing}", ln=1, align="C")
+        pdf.output(f"static/{user.username}.pdf")
+        send_email(
+            to_address=user.email,
+            subject="Your report",
+            message=f"Hi {user.username}, here is your report",
+            attachment_file=f"static/{user.username}.pdf",
+            content="application/pdf"
+        )
+        os.remove(f"static/{user.username}.pdf")
+
+    return "Report should be sent"
+
+
+@celery.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    sender.add_periodic_task(
+        crontab(hour=19, minute=31),
+        send_report.s(),
+    )
+    
 
 
 if __name__ == '__main__':

@@ -27,5 +27,6 @@ Make sure you have python3 and pip3 installed on your system.
 4. Run celery by `celery -A main.celery worker -l info`
 5. Run redis by `redis-server`
 6. Run Flask application by `python3 main.py`
+7. Run celery beat bt `elery -A main.celery beat --max-interval 2 -l info`
 
 Go to localhost:5000 to view the application.
