@@ -12,6 +12,45 @@ from io import BytesIO
 from celery_worker import make_celery
 from celery.result import AsyncResult
 import csv
+import smtplib
+from datetime import datetime
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+
+SMPTP_SERVER_HOST = "localhost"
+SMPTP_SERVER_PORT = 1025
+SENDER_ADDRESS = "gokulakrishnan@gmail.com"
+SENDER_PASSWORD = ""
+
+def send_email(to_address, subject, message, content="text", attachment_file=None):
+    msg = MIMEMultipart()
+    msg["From"] = SENDER_ADDRESS
+    msg["To"] = to_address
+    msg["Subject"] = subject
+
+    if content == "html":
+        msg.attach(MIMEText(message, "html"))
+    else:
+        msg.attach(MIMEText(message, "plain"))
+
+    if attachment_file:
+        with open(attachment_file, "rb") as attachment:
+            part = MIMEBase("application", "octet-stream")
+            part.set_payload(attachment.read())
+        encoders.encode_base64(part)
+        part.add_header(
+            "Content-Disposition", f"attachment; filename= {attachment_file}",
+        )
+        msg.attach(part)
+
+    s = smtplib.SMTP(host=SMPTP_SERVER_HOST, port=SMPTP_SERVER_PORT)
+   
+    s.login(SENDER_ADDRESS, SENDER_PASSWORD)
+    s.send_message(msg)
+    s.quit()
+    return True
 
 
 app = Flask(__name__)
@@ -98,6 +137,8 @@ def login():
             is_admin=True
         else:
             is_admin= False
+
+        send_email_for_login.delay(user.email, user.username)
         return jsonify({'message': 'Logged in as {}'.format(user.username),
             'access_token': access_token,
             'username': user.username,
@@ -201,6 +242,8 @@ def create_user():
 
     db.session.add(new_user)
     db.session.commit()
+
+    send_email_for_registration.delay(data['email'], data['username'])
     return jsonify({'message': 'New user created!'}),200
 
 @app.route('/api/user/<id>', methods=['DELETE'])
@@ -505,6 +548,16 @@ def book_show():
     new_booking = Booking(user_id=get_jwt_identity(), show_id=data['show_id'], tickets=data['tickets'])
     db.session.add(new_booking)
     db.session.commit()
+    #email, username, theatre_name, show_name, show_timing, tickets
+    email=User.query.get(get_jwt_identity()).email
+    username=User.query.get(get_jwt_identity()).username
+    theatre_name=Theatre.query.get(show.theatre_id).name
+    show_name=show.name
+    show_timing=show.timing
+    tickets=data['tickets']
+    send_email_for_booking.delay(email, username, theatre_name, show_name, show_timing, tickets)
+
+
     return jsonify({'message': 'Tickets booked!'}),200
 
 @app.route('/api/show/<id>', methods=['PUT'])
@@ -624,9 +677,6 @@ generated_images = []
 @app.route('/api/summary', methods=['POST'])
 @jwt_required()
 def get_summary():
-    # Generate image for each show, showing histogram of distribution of ratings
-    # Generate image for each show, showing histogram of distribution of ratings
-    #here admin id is the user id of admins
     current_user_id = get_jwt_identity()
     current_user = User.query.get_or_404(current_user_id)
 
@@ -676,10 +726,8 @@ def get_summary():
 
 @app.route('/get_image/<filename>', methods=['GET'])
 def get_image(filename):
-    # Get the index from the filename
     index = int(filename.split("_")[1].split(".")[0])
     
-    # Return the image for the corresponding index
     return send_file(generated_images[index], mimetype='image/png')
   
 @app.route('/api/search', methods=['POST'])
@@ -834,6 +882,33 @@ def taskstatus(id):
         "Task_Result": task.result
     })
 
+
+@celery.task(name="send_email_for_login")
+def send_email_for_login(email, username):
+     send_email(
+        to_address=email,
+        subject="Login Successful",
+        message=f"Hi {username}, You have logged into your account. Thank you for using our service."
+    )
+     return "Login email sholud be sent"
+
+@celery.task(name="send_email_for_registration")
+def send_email_for_registration(email, username):
+        send_email(
+            to_address=email,
+            subject="Registration Successful",
+            message=f"Hi {username}, You have registered into your account. Thank you for using our service."
+        )
+        return "Registration email sholud be sent"
+
+@celery.task(name="send_email_for_booking")
+def send_email_for_booking(email, username, theatre_name, show_name, show_timing, tickets):
+        send_email(
+            to_address=email,
+            subject="Booking Confirmation",
+            message=f"Hi {username}, You have booked {tickets} tickets for {show_name} at {theatre_name} on {show_timing}. Thank you for using our service."
+        )
+        return "Booking email sholud be sent"
 
 
 if __name__ == '__main__':
