@@ -4,7 +4,9 @@ def make_celery(app):
     celery = Celery(
         "app",
         backend=app.config['CELERY_RESULT_BACKEND'],
-        broker=app.config['CELERY_BROKER_URL']
+        broker=app.config['CELERY_BROKER_URL'],
+        enable_utc=True,
+        timezone='Asia/Kolkata'
     )
     celery.conf.update(app.config)
     TaskBase = celery.Task

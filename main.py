@@ -65,7 +65,7 @@ app.config["JWT_ACCESS_TOKEN_EXPIRES"] = ACCESS_EXPIRES
 
 app.config.update(
     CELERY_BROKER_URL='redis://localhost:6379',
-    CELERY_RESULT_BACKEND='redis://localhost:6379'
+    CELERY_RESULT_BACKEND='redis://localhost:6379/1'
 )
 celery = make_celery(app)
 
@@ -912,9 +912,8 @@ def send_email_for_booking(email, username, theatre_name, show_name, show_timing
         )
         return "Booking email sholud be sent"
 
-@celery.task(name="send_hi")
+@celery.task(name="send_report")
 def send_report():
-    # generate a reporrt in pdf for all users not admin and send to their email
     users = User.query.filter_by(is_admin=False).all()
     for user in users:
         pdf = FPDF()
@@ -942,11 +941,21 @@ def send_report():
 
 @celery.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
+    
+
     sender.add_periodic_task(
-        crontab(hour=19, minute=31),
+        crontab(hour=23, minute=59, day_of_month=28),
         send_report.s(),
     )
+
     
+    sender.add_periodic_task(
+        crontab(hour=16, minute=30),
+        send_report.s(),
+    )
+
+
+
 
 
 if __name__ == '__main__':
