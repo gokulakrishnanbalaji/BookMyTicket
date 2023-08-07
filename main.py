@@ -20,6 +20,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from fpdf import FPDF
+from flask_caching import Cache
 
 SMPTP_SERVER_HOST = "localhost"
 SMPTP_SERVER_PORT = 1025
@@ -68,6 +69,13 @@ app.config.update(
     CELERY_RESULT_BACKEND='redis://localhost:6379/1'
 )
 celery = make_celery(app)
+
+app.config['CACHE_TYPE'] = 'RedisCache'
+app.config['CACHE_REDIS_HOST'] = 'localhost'
+app.config['CACHE_REDIS_PORT'] = '6379'
+
+cache = Cache(app)
+
 
 
 db = SQLAlchemy(app)
@@ -275,6 +283,7 @@ def delete_user(id):
     return jsonify({'message': 'User deleted!'}),200
 
 @app.route('/api/theatres', methods=['GET'])
+@cache.cached(timeout=60)
 @jwt_required()
 def get_theatres():
     theatres = Theatre.query.all()
@@ -296,6 +305,7 @@ def get_theatres():
     return jsonify({'theatres': output}),200
 
 @app.route('/api/theatre/<id>', methods=['GET'])
+@cache.memoize(timeout=60)
 @jwt_required()
 def get_theatre(id):
     theatre = Theatre.query.get(id)
