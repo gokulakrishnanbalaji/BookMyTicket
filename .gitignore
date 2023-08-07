@@ -2,3 +2,4 @@
 instance/
 dump.rdb
 /static/theatres.csv
+/__pycache__/
