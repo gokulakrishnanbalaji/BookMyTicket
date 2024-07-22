@@ -1,4 +1,4 @@
-# BookMyShow
+# BookMyTicket
 
 ## Problem Statement
 
